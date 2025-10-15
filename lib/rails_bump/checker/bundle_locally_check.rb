@@ -79,7 +79,12 @@ module RailsBump
         GEMFILE
 
         @dependencies.each do |gem_name, gem_version|
-          result += "gem '#{gem_name}', '#{gem_version}'\n" unless gem_name == "rails"
+          if gem_version.include?(",")
+            gem_versions = gem_version.split(", ").map { |i| "'#{i}'" }.join(", ")
+            result += "gem '#{gem_name}', #{gem_versions}\n" unless gem_name == "rails"
+          else
+            result += "gem '#{gem_name}', '#{gem_version}'\n" unless gem_name == "rails"
+          end
         end
 
         result
@@ -93,7 +98,7 @@ module RailsBump
         FileUtils.rm_rf File.join(tmp_dir, "Gemfile")
         FileUtils.rm_rf File.join(tmp_dir, "Gemfile.lock")
 
-        # Clean Bundler cache
+        # Remove unused gems
         `bundle clean --force`
 
         File.write(File.join(tmp_dir, "Gemfile"), gemfile_content)

@@ -8,6 +8,15 @@ if ENV["COVERAGE"]
   end
 end
 
+# VCR setup
+require "vcr"
+VCR.configure do |c|
+  c.cassette_library_dir = "spec/vcr_cassettes"
+  c.hook_into :webmock
+  c.default_cassette_options = { record: ENV["VCR_RECORD_NEW"] ? :all : :once }
+  c.configure_rspec_metadata!
+end
+
 require "rails_bump/checker"
 
 RSpec.configure do |config|
@@ -19,5 +28,12 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  if ENV["VCR_RECORD_NEW"]
+    config.before(:each) do
+      cache_path = File.expand_path('~/.bundler/cache')
+      FileUtils.rm_rf(cache_path) if Dir.exist?(cache_path)
+    end
   end
 end
